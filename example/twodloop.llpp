@@ -1,0 +1,77 @@
+; RUN: opt %loadPolly -analyze < %s | FileCheck %s
+;
+; FIXME: Edit the run line and add checks!
+;
+; XFAIL: *
+;
+;
+source_filename = "twodloop.llpp"
+target datalayout = "e-m:e-i64:64-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-pc-linux-gnu"
+
+define void @_Z3fooPA2_i([2 x i32]* %A) {
+bb:
+  br label %bb4
+
+bb4:                                              ; preds = %bb18, %bb
+  %indvars.iv1 = phi i64 [ %indvars.iv.next2, %bb18 ], [ 0, %bb ]
+  %exitcond3 = icmp ne i64 %indvars.iv1, 2
+  br i1 %exitcond3, label %bb6, label %bb5
+
+bb5:                                              ; preds = %bb4
+  br label %bb19
+
+bb6:                                              ; preds = %bb4
+  br label %bb7
+
+bb7:                                              ; preds = %bb16, %bb6
+  %indvars.iv = phi i64 [ %indvars.iv.next, %bb16 ], [ 1, %bb6 ]
+  %exitcond = icmp ne i64 %indvars.iv, 2
+  br i1 %exitcond, label %bb9, label %bb8
+
+bb8:                                              ; preds = %bb7
+  br label %bb17
+
+bb9:                                              ; preds = %bb7
+  %tmp = add nsw i64 %indvars.iv, -1
+  %tmp10 = getelementptr inbounds [2 x i32], [2 x i32]* %A, i64 %indvars.iv1, i64 %tmp
+  %tmp11 = load i32, i32* %tmp10, align 4, !tbaa !1
+  %tmp12 = icmp slt i32 %tmp11, 0
+  br i1 %tmp12, label %bb13, label %bb14
+
+bb13:                                             ; preds = %bb9
+  br label %bb14
+
+bb14:                                             ; preds = %bb13, %bb9
+  %t.0 = phi i32 [ 0, %bb13 ], [ %tmp11, %bb9 ]
+  %tmp15 = getelementptr inbounds [2 x i32], [2 x i32]* %A, i64 %indvars.iv1, i64 %indvars.iv
+  store i32 %t.0, i32* %tmp15, align 4, !tbaa !1
+  br label %bb16
+
+bb16:                                             ; preds = %bb14
+  %indvars.iv.next = add nuw nsw i64 %indvars.iv, 1
+  br label %bb7
+
+bb17:                                             ; preds = %bb8
+  br label %bb18
+
+bb18:                                             ; preds = %bb17
+  %indvars.iv.next2 = add nuw nsw i64 %indvars.iv1, 1
+  br label %bb4
+
+bb19:                                             ; preds = %bb5
+  ret void
+}
+
+declare void @llvm.lifetime.start.p0i8(i64, i8* nocapture)
+
+declare void @llvm.lifetime.end.p0i8(i64, i8* nocapture)
+
+
+!llvm.ident = !{!0}
+
+!0 = !{!"clang version 3.8.0-2ubuntu4 (tags/RELEASE_380/final)"}
+!1 = !{!2, !2, i64 0}
+!2 = !{!"int", !3, i64 0}
+!3 = !{!"omnipotent char", !4, i64 0}
+!4 = !{!"Simple C/C++ TBAA"}

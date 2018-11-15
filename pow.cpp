@@ -11,7 +11,7 @@ isl_stat print_point(isl_point *pt, void *data) {
 
 // DO j=0,1
 //     DO i=0,1
-//         S0: t = A(i,j-1)
+//         S0: t = A(i,j-1) //R0 read
 //         S1: IF (t < 0) t = 0
 //         S2: A(i,j) = t
 //     ENDDO
