@@ -20,7 +20,7 @@ isl_stat print_point(isl_point *pt, void *data) {
 //  the may-reads as sinks and may-sources and the may-writes (and kills) as
 //  the must-sources and then removing the dependences that have a may-write
 //  (or kill) as source.
-// 
+//
 // In PPCG, when the live-range reordering described in this paper is not
 // enabled, the following dependences are computed.  The first application of
 // dependence analysis takes the tagged may-reads as sinks, the tagged
@@ -68,7 +68,7 @@ isl_stat print_point(isl_point *pt, void *data) {
 void loop1() {
 
     isl_ctx *ctx = isl_ctx_alloc();
-    isl_printer *p =  NULL; 
+    isl_printer *p =  NULL;
 
     // ===================
     /*
@@ -79,7 +79,7 @@ void loop1() {
     //         S2: A(i,j) = t
     //     ENDDO
     // ENDDO
-    auto *may_reads = isl_union_map_read_from_str(ctx, 
+    auto *may_reads = isl_union_map_read_from_str(ctx,
             "{"
             "S0[i, j] -> A[i-1, j];"
             "S1[i, j] -> T[];" // This write is internal to S1 in a sense?
@@ -111,7 +111,7 @@ void loop1() {
     //S3 : t [i + j] = B[i ][ j ];
     //S4 : C [j ][ i ] += t[i + j ];
     //      }
-    auto *tagged_may_reads = isl_union_map_read_from_str(ctx, 
+    auto *tagged_may_reads = isl_union_map_read_from_str(ctx,
             "{"
             "[S1[i, j] -> R0[]] -> A[i][j];"
             "[S2[i, j] -> R1[]] -> T[i+j];" // This write is internal to S1 in a sense?
@@ -169,7 +169,7 @@ void loop1() {
                 "}");
         sched =
             isl_schedule_from_domain(isl_union_map_domain(isl_union_map_copy(new_sched)));
-        sched = isl_schedule_insert_partial_schedule(sched, 
+        sched = isl_schedule_insert_partial_schedule(sched,
           isl_multi_union_pw_aff_from_union_map(new_sched));
     }
 
@@ -197,18 +197,18 @@ void loop1() {
     // MUST SOURCE: tagged must writes U tagged kills
     // OUTPUT: FLOW
     // OUTPUT': FLOW - tagged kills
-    // tagged flow dependence: 
+    // tagged flow dependence:
     //     may write ---> mayread, as long as there is no
     //     intermediate must write or kill
-    
+
     {
         std::cout << "\n\n*** FLOW 1 (FLOW / RAW)";
         auto *access = isl_union_access_info_from_sink(isl_union_map_copy(may_reads));
-        access = 
+        access =
             isl_union_access_info_set_may_source(access, isl_union_map_copy(may_writes));
-        access = 
+        access =
             isl_union_access_info_set_must_source(access, isl_union_map_copy(must_writes));
-        access = 
+        access =
             isl_union_access_info_set_schedule(access, isl_schedule_copy(sched));
         std::cout << "\n\nACCESS: " << isl_union_access_info_to_str(access);
 
@@ -222,12 +222,12 @@ void loop1() {
     {
         std::cout << "\n\n*** FLOW 2 (FALSE DEPENDENCES)\n";
         auto *access = isl_union_access_info_from_sink(isl_union_map_copy(may_writes));
-        access = 
+        access =
             isl_union_access_info_set_must_source(access, isl_union_map_copy(must_writes));
-        access = 
-            isl_union_access_info_set_may_source(access, 
+        access =
+            isl_union_access_info_set_may_source(access,
                     isl_union_map_union(isl_union_map_copy(may_reads), isl_union_map_copy(may_writes)));
-        access = 
+        access =
             isl_union_access_info_set_schedule(access, isl_schedule_copy(sched));
         std::cout << "\n\nACCESS: " << isl_union_access_info_to_str(access);
 
@@ -245,15 +245,15 @@ void loop1() {
 
     assert (falsedeps);
     assert (falsedeps_full);
-    isl_union_map *war = 
-        isl_union_map_intersect_domain(isl_union_map_copy(falsedeps), 
+    isl_union_map *war =
+        isl_union_map_intersect_domain(isl_union_map_copy(falsedeps),
                 isl_union_map_domain(may_reads));
 
-    isl_union_map *war_full = isl_union_map_intersect_domain(isl_union_map_copy(falsedeps_full), 
+    isl_union_map *war_full = isl_union_map_intersect_domain(isl_union_map_copy(falsedeps_full),
             isl_union_map_domain(may_reads));
 
 
-    isl_union_map *waw_full = isl_union_map_intersect_domain(isl_union_map_copy(falsedeps_full), 
+    isl_union_map *waw_full = isl_union_map_intersect_domain(isl_union_map_copy(falsedeps_full),
             isl_union_map_domain(may_writes));
     std::cout<<"\n\nANTI (WAR) " << isl_union_map_to_str(war);
     std::cout<<"\n\nANTI FULL (WAR) " << isl_union_map_to_str(war_full);
@@ -267,10 +267,10 @@ void loop1() {
      {
         std::cout << "\n\n*** FLOW 3 (LIVE INS)\n";
         auto *access = isl_union_access_info_from_sink(isl_union_map_copy(may_reads));
-        access = 
+        access =
             isl_union_access_info_set_may_source(access, isl_union_map_copy(may_writes));
 
-        access = 
+        access =
             isl_union_access_info_set_schedule(access, isl_schedule_copy(sched));
         std::cout << "\n\nACCESS: " << isl_union_access_info_to_str(access);
 
@@ -286,10 +286,10 @@ void loop1() {
      {
         std::cout << "\n\n*** FLOW 4 (DEAD)\n";
         auto *access = isl_union_access_info_from_sink(isl_union_map_copy(must_writes));
-        access = 
+        access =
             isl_union_access_info_set_may_source(access, isl_union_map_copy(may_writes));
 
-        access = 
+        access =
             isl_union_access_info_set_schedule(access, isl_schedule_copy(sched));
         std::cout << "\n\nACCESS: " << isl_union_access_info_to_str(access);
 

@@ -9,63 +9,118 @@ source_filename = "twodloop.llpp"
 target datalayout = "e-m:e-i64:64-f80:128-n8:16:32:64-S128"
 target triple = "x86_64-pc-linux-gnu"
 
-define void @_Z3fooPA100_i([100 x i32]* %A) {
+define void @_Z3fooPA200_iPiS0_S0_i([200 x i32]* %A, i32* %t, [200 x i32]* %C, [200 x i32]* %B, i32 %n) {
 bb:
-  %t = alloca [1 x i32], align 4
-  %tmp = bitcast [1 x i32]* %t to i8*
-  call void @llvm.lifetime.start.p0i8(i64 4, i8* nonnull %tmp)
-  br label %bb4
+  %tmp = sext i32 %n to i64
+  br label %bb9
 
-bb4:                                              ; preds = %bb20, %bb
-  %indvars.iv1 = phi i64 [ %indvars.iv.next2, %bb20 ], [ 2, %bb ]
-  %exitcond3 = icmp ne i64 %indvars.iv1, 4
-  br i1 %exitcond3, label %bb6, label %bb5
+bb9:                                              ; preds = %bb28, %bb
+  %indvars.iv7 = phi i64 [ %indvars.iv.next8, %bb28 ], [ 0, %bb ]
+  %tmp10 = icmp slt i64 %indvars.iv7, %tmp
+  br i1 %tmp10, label %bb12, label %bb11
 
-bb5:                                              ; preds = %bb4
+bb11:                                             ; preds = %bb9
+  br label %bb29
+
+bb12:                                             ; preds = %bb9
+  br label %bb13
+
+bb13:                                             ; preds = %bb26, %bb12
+  %indvars.iv3 = phi i64 [ %indvars.iv.next4, %bb26 ], [ 0, %bb12 ]
+  %wide.trip.count5 = zext i32 %n to i64
+  %exitcond6 = icmp ne i64 %indvars.iv3, %wide.trip.count5
+  br i1 %exitcond6, label %bb15, label %bb14
+
+bb14:                                             ; preds = %bb13
+  br label %bb27
+
+bb15:                                             ; preds = %bb13
+  br label %bb16
+
+bb16:                                             ; preds = %bb15
+  %tmp17 = getelementptr inbounds [200 x i32], [200 x i32]* %A, i64 %indvars.iv7, i64 %indvars.iv3
+  %tmp18 = load i32, i32* %tmp17, align 4, !tbaa !1
+  %tmp19 = add nuw nsw i64 %indvars.iv7, %indvars.iv3
+  %tmp20 = getelementptr inbounds i32, i32* %t, i64 %tmp19
+  store i32 %tmp18, i32* %tmp20, align 4, !tbaa !1
   br label %bb21
 
-bb6:                                              ; preds = %bb4
-  br label %bb7
+bb21:                                             ; preds = %bb16
+  %tmp22 = add nuw nsw i64 %indvars.iv7, %indvars.iv3
+  %tmp23 = getelementptr inbounds i32, i32* %t, i64 %tmp22
+  %tmp24 = load i32, i32* %tmp23, align 4, !tbaa !1
+  %tmp25 = getelementptr inbounds [200 x i32], [200 x i32]* %C, i64 %indvars.iv7, i64 %indvars.iv3
+  store i32 %tmp24, i32* %tmp25, align 4, !tbaa !1
+  br label %bb26
 
-bb7:                                              ; preds = %bb18, %bb6
-  %indvars.iv = phi i64 [ %indvars.iv.next, %bb18 ], [ 1, %bb6 ]
-  %exitcond = icmp ne i64 %indvars.iv, 3
-  br i1 %exitcond, label %bb9, label %bb8
+bb26:                                             ; preds = %bb21
+  %indvars.iv.next4 = add nuw nsw i64 %indvars.iv3, 1
+  br label %bb13
 
-bb8:                                              ; preds = %bb7
-  br label %bb19
+bb27:                                             ; preds = %bb14
+  br label %bb28
 
-bb9:                                              ; preds = %bb7
-  br label %bb10
+bb28:                                             ; preds = %bb27
+  %indvars.iv.next8 = add nuw nsw i64 %indvars.iv7, 1
+  br label %bb9
 
-bb10:                                             ; preds = %bb9
-  %tmp11 = mul nuw nsw i64 %indvars.iv, %indvars.iv1
-  %tmp12 = getelementptr inbounds [1 x i32], [1 x i32]* %t, i64 0, i64 0
-  %tmp13 = trunc i64 %tmp11 to i32
-  store i32 %tmp13, i32* %tmp12, align 4, !tbaa !1
-  br label %bb14
+bb29:                                             ; preds = %bb11
+  %tmp30 = sext i32 %n to i64
+  br label %bb31
 
-bb14:                                             ; preds = %bb10
-  %tmp15 = getelementptr inbounds [1 x i32], [1 x i32]* %t, i64 0, i64 0
-  %tmp16 = load i32, i32* %tmp15, align 4, !tbaa !1
-  %tmp17 = getelementptr inbounds [100 x i32], [100 x i32]* %A, i64 %indvars.iv, i64 %indvars.iv1
-  store i32 %tmp16, i32* %tmp17, align 4, !tbaa !1
-  br label %bb18
+bb31:                                             ; preds = %bb52, %bb29
+  %indvars.iv1 = phi i64 [ %indvars.iv.next2, %bb52 ], [ 0, %bb29 ]
+  %tmp32 = icmp slt i64 %indvars.iv1, %tmp30
+  br i1 %tmp32, label %bb34, label %bb33
 
-bb18:                                             ; preds = %bb14
+bb33:                                             ; preds = %bb31
+  br label %bb53
+
+bb34:                                             ; preds = %bb31
+  br label %bb35
+
+bb35:                                             ; preds = %bb50, %bb34
+  %indvars.iv = phi i64 [ %indvars.iv.next, %bb50 ], [ 0, %bb34 ]
+  %wide.trip.count = zext i32 %n to i64
+  %exitcond = icmp ne i64 %indvars.iv, %wide.trip.count
+  br i1 %exitcond, label %bb37, label %bb36
+
+bb36:                                             ; preds = %bb35
+  br label %bb51
+
+bb37:                                             ; preds = %bb35
+  br label %bb38
+
+bb38:                                             ; preds = %bb37
+  %tmp39 = getelementptr inbounds [200 x i32], [200 x i32]* %B, i64 %indvars.iv1, i64 %indvars.iv
+  %tmp40 = load i32, i32* %tmp39, align 4, !tbaa !1
+  %tmp41 = add nuw nsw i64 %indvars.iv1, %indvars.iv
+  %tmp42 = getelementptr inbounds i32, i32* %t, i64 %tmp41
+  store i32 %tmp40, i32* %tmp42, align 4, !tbaa !1
+  br label %bb43
+
+bb43:                                             ; preds = %bb38
+  %tmp44 = add nuw nsw i64 %indvars.iv1, %indvars.iv
+  %tmp45 = getelementptr inbounds i32, i32* %t, i64 %tmp44
+  %tmp46 = load i32, i32* %tmp45, align 4, !tbaa !1
+  %tmp47 = getelementptr inbounds [200 x i32], [200 x i32]* %C, i64 %indvars.iv, i64 %indvars.iv1
+  %tmp48 = load i32, i32* %tmp47, align 4, !tbaa !1
+  %tmp49 = add nsw i32 %tmp48, %tmp46
+  store i32 %tmp49, i32* %tmp47, align 4, !tbaa !1
+  br label %bb50
+
+bb50:                                             ; preds = %bb43
   %indvars.iv.next = add nuw nsw i64 %indvars.iv, 1
-  br label %bb7
+  br label %bb35
 
-bb19:                                             ; preds = %bb8
-  br label %bb20
+bb51:                                             ; preds = %bb36
+  br label %bb52
 
-bb20:                                             ; preds = %bb19
+bb52:                                             ; preds = %bb51
   %indvars.iv.next2 = add nuw nsw i64 %indvars.iv1, 1
-  br label %bb4
+  br label %bb31
 
-bb21:                                             ; preds = %bb5
-  %tmp22 = bitcast [1 x i32]* %t to i8*
-  call void @llvm.lifetime.end.p0i8(i64 4, i8* nonnull %tmp22)
+bb53:                                             ; preds = %bb33
   ret void
 }
 
