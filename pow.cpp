@@ -168,74 +168,52 @@ void loop1() {
     //     may write ---> mayread, as long as there is no
     //     intermediate must write or kill
     
-    auto *access = isl_union_access_info_from_sink(isl_union_map_copy(may_reads));
-    // access = isl_union_access_info_set_kill(access, isl_union_map_copy(kills));
-     access = isl_union_access_info_set_kill(access, isl_union_map_copy(may_reads));
-    // access = isl_union_access_info_set_may_source(access, isl_union_map_copy(may_writes));
-    // access = isl_union_access_info_set_must_source(access, isl_union_map_copy(must_writes));
-    access = isl_union_access_info_set_schedule(access, sched);
-    std::cout << "\n\nACCESS: " << isl_union_access_info_to_str(access);
+    {
+        std::cout << "\n\n*** FLOW 1 (FLOW / RAW)";
+        auto *access = isl_union_access_info_from_sink(isl_union_map_copy(may_reads));
+        access = 
+            isl_union_access_info_set_may_source(access, isl_union_map_copy(may_writes));
+        access = 
+            isl_union_access_info_set_must_source(access, isl_union_map_copy(must_writes));
+        access = 
+            isl_union_access_info_set_schedule(access, isl_schedule_copy(sched));
+        std::cout << "\n\nACCESS: " << isl_union_access_info_to_str(access);
 
-    auto *flow = isl_union_access_info_compute_flow(access);
-    std::cout<<"\n\nFLOW: " << isl_union_flow_to_str(flow);
-
-    // __isl_give isl_map *isl_map_power(__isl_take isl_map *map, int *exact);
-    //isl_map *m = isl_map_read_from_str(ctx, "{ A[x] -> A[x] }");
-    // app Cons nil xs = xs
-    // app (Cons a b) xs = let b' = b ++ xs in Cons a b'
-    // in:(nil, cons a b), | in:xs,   | out:nil, (cons a', cons b')
-    //APP[ 0         1 2   | 3     ] |  OUT[4          5         6]
-    //isl_map *m = isl_map_read_from_str(ctx, "{ A[0] -> A[0]; A[x] -> A[x + 1] : x > 0  }");
-    // isl_map *m = isl_map_read_from_str(ctx, "{ a[x] -> a[x + 3]: x mod 3 = 0}");
-    // 9k + 2 -> 9k + 4
-    // 9k + 9 -> 9k + 7
-    // 9k + 3 -> 9k + 5
-    //
-    //
-    //TRANS: { a[x] -> a[o0] : (x) mod 7 = 6 and -4 + x <= o0 <= -3 + x; 
-    //          a[x] -> a[-4 + x] : -5 + x <= 7*floor((x)/7) <= -4 + x; 
-    // isl_map *m = isl_map_read_from_str(ctx, "{ a[x] -> a[x-4+0]: x mod 7 = 4; a[x] -> a[x-5+1]: x mod 7 = 5; a[x] -> a[x-6+2]: x mod 7 = 6; a[x] -> a[x-6+3]: x mod 7 = 6; \
-    //         a[x] -> a[x-5-7+1]:x mod 7 = 5; a[x] -> a[x-6-7+2]: x mod 7 = 6 }");
-    // std::cout << "built map\n";
-    // isl_map *pow_ = isl_map_power(isl_map_copy(m), NULL);
-    // isl_map *trans_ = isl_map_transitive_closure(m, NULL);
+        auto *flow = isl_union_access_info_compute_flow(access);
+        std::cout<<"\n\nFLOW: " << isl_union_flow_to_str(flow);
+    }
 
 
-    // isl_printer *p = isl_printer_to_str(ctx);
-    // isl_printer_print_map(p, pow_);
-    // std::cout <<"\nPOWER: "<<  isl_printer_get_str(p);
+    // Data 2
+    // ------
+    // SINK: may writes
+    // MAY SOURCE: may read U may write
+    // MUST SOURCE: must writes
+    // OUTPUT: FALSE DEPENDENCES (WAR + WAW)
+    // OUTPUT': FLOW - tagged kills
+    // tagged flow dependence: 
+    //     may write ---> mayread, as long as there is no
+    //     intermediate must write or kill
+    {
+        std::cout << "\n\n*** FLOW 2 (FALSE DEPENDENCES / WAR + WAW)";
+        auto *access = isl_union_access_info_from_sink(isl_union_map_copy(may_writes));
+        access = 
+            isl_union_access_info_set_may_source(access, 
+                    isl_union_map_union(isl_union_map_copy(may_writes),
+                        isl_union_map_copy(may_reads)));
+        access = 
+            isl_union_access_info_set_must_source(access, isl_union_map_copy(must_writes));
+        access = 
+            isl_union_access_info_set_schedule(access, isl_schedule_copy(sched));
+        std::cout << "\n\nACCESS: " << isl_union_access_info_to_str(access);
 
-    // isl_printer_free(p);
-    // p = isl_printer_to_str(ctx);
-    // isl_printer_print_map(p, trans_);
-    // std::cout <<"\nTRANS: "<<isl_printer_get_str(p);
+        auto *flow = isl_union_access_info_compute_flow(access);
+        std::cout<<"\n\nFLOW: " << isl_union_flow_to_str(flow);
+    }
 
 
-    // // ==================================
-    // // TRANS: { a[x] -> a[o0] : (x) mod 7 = 6 and -4 + x <= o0 <= -3 + x; 
-    // //          a[x] -> a[-4 + x] : -5 + x <= 7*floor((x)/7) <= -4 + x; 
-    // //          a[x] -> a[-11 + x] : 7*floor((x)/7) <= -5 + x }
 
-    // // CONSTRAINT 1
-    // std::cout << "\n===========================\n";
-    // isl_set *domain = isl_set_read_from_str(ctx, "{a[x]:  -5 + x <= 7*floor((x)/7) <= -4 + x and -20 <= x <= 20}");
-    // std::cout << "\nDOMAIN: " << isl_set_to_str(domain);
-    // isl_set_foreach_point(domain, print_point, NULL);
-    // 
-    // isl_set *app = isl_set_apply(domain, isl_map_copy(trans_));
-    // std::cout<<"\nAPP: " << isl_set_to_str(app);
-    // isl_set_foreach_point(app, print_point, NULL);
 
-    // 
-    // // CONSTRAINT 2
-    // std::cout << "\n===========================\n";
-    // domain = isl_set_read_from_str(ctx, "{a[x]:  7*floor((x)/7) <= -5 + x and -20 <= x <= 20}");
-    // std::cout << "\nDOMAIN: " << isl_set_to_str(domain);
-    // isl_set_foreach_point(domain, print_point, NULL);
-    // 
-    // app = isl_set_apply(domain, trans_);
-    // std::cout<<"\nAPP: " << isl_set_to_str(app);
-    // isl_set_foreach_point(app, print_point, NULL);
 }
 
 int main() {
