@@ -1,11 +1,10 @@
-
-#define N  2
-void foo(int A[N][N] ) {
-    for(int i = 0; i < N; i++) {
-        for(int j = 1; j < N; j++) {
-            int t = A[i][j - 1];
-            if (t < 0) { t = 0; }
-            A[i][j] = t;
+#define N  100
+void foo(int A[N][N]) {
+    int t[1];
+    for(int j = 2; j <= 3; j++) {
+        for(int i = 1; i <= 2; i++) {
+S1:         t[0] = i * j;
+S3:          A[i][j] = t[0];
         }
     }
 }

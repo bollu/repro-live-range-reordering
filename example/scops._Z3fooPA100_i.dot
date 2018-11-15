@@ -1,0 +1,79 @@
+digraph "Scop Graph for '_Z3fooPA100_i' function" {
+	label="Scop Graph for '_Z3fooPA100_i' function";
+
+	Node0x20c66f0 [shape=record,label="{bb:\l  br label %bb4\l}"];
+	Node0x20c66f0 -> Node0x20c7380;
+	Node0x20c7380 [shape=record,label="{bb4:                                              \l  %indvars.iv1 = phi i64 [ %indvars.iv.next2, %bb21 ], [ 2, %bb ]\l  %exitcond3 = icmp ne i64 %indvars.iv1, 4\l  br i1 %exitcond3, label %bb6, label %bb5\l}"];
+	Node0x20c7380 -> Node0x20dc260;
+	Node0x20c7380 -> Node0x20daed0;
+	Node0x20dc260 [shape=record,label="{bb6:                                              \l  br label %bb7\l}"];
+	Node0x20dc260 -> Node0x20daeb0;
+	Node0x20daeb0 [shape=record,label="{bb7:                                              \l  %indvars.iv = phi i64 [ %indvars.iv.next, %bb19 ], [ 1, %bb6 ]\l  %exitcond = icmp ne i64 %indvars.iv, 3\l  br i1 %exitcond, label %bb9, label %bb8\l}"];
+	Node0x20daeb0 -> Node0x20dd340;
+	Node0x20daeb0 -> Node0x20dd450;
+	Node0x20dd340 [shape=record,label="{bb9:                                              \l  br label %bb10\l}"];
+	Node0x20dd340 -> Node0x20dd400;
+	Node0x20dd400 [shape=record,label="{bb10:                                             \l  %tmp = add nsw i64 %indvars.iv1, -1\l  %tmp11 = getelementptr inbounds [100 x i32], [100 x i32]* %A, i64\l... %indvars.iv, i64 %tmp\l  %tmp12 = load i32, i32* %tmp11, align 4, !tbaa !1\l  br label %bb13\l}"];
+	Node0x20dd400 -> Node0x20dd420;
+	Node0x20dd420 [shape=record,label="{bb13:                                             \l  %tmp14 = icmp slt i32 %tmp12, 0\l  br i1 %tmp14, label %bb15, label %bb16\l}"];
+	Node0x20dd420 -> Node0x20dd690;
+	Node0x20dd420 -> Node0x20dd3a0;
+	Node0x20dd690 [shape=record,label="{bb15:                                             \l  br label %bb16\l}"];
+	Node0x20dd690 -> Node0x20dd3a0;
+	Node0x20dd3a0 [shape=record,label="{bb16:                                             \l  %t.0 = phi i32 [ 0, %bb15 ], [ %tmp12, %bb13 ]\l  br label %bb17\l}"];
+	Node0x20dd3a0 -> Node0x20dd540;
+	Node0x20dd540 [shape=record,label="{bb17:                                             \l  %tmp18 = getelementptr inbounds [100 x i32], [100 x i32]* %A, i64\l... %indvars.iv, i64 %indvars.iv1\l  store i32 %t.0, i32* %tmp18, align 4, !tbaa !1\l  br label %bb19\l}"];
+	Node0x20dd540 -> Node0x20dd5a0;
+	Node0x20dd5a0 [shape=record,label="{bb19:                                             \l  %indvars.iv.next = add nuw nsw i64 %indvars.iv, 1\l  br label %bb7\l}"];
+	Node0x20dd5a0 -> Node0x20daeb0[constraint=false];
+	Node0x20dd450 [shape=record,label="{bb8:                                              \l  br label %bb20\l}"];
+	Node0x20dd450 -> Node0x20dd660;
+	Node0x20dd660 [shape=record,label="{bb20:                                             \l  br label %bb21\l}"];
+	Node0x20dd660 -> Node0x20ddec0;
+	Node0x20ddec0 [shape=record,label="{bb21:                                             \l  %indvars.iv.next2 = add nuw nsw i64 %indvars.iv1, 1\l  br label %bb4\l}"];
+	Node0x20ddec0 -> Node0x20c7380[constraint=false];
+	Node0x20daed0 [shape=record,label="{bb5:                                              \l  br label %bb22\l}"];
+	Node0x20daed0 -> Node0x20daf30;
+	Node0x20daf30 [shape=record,label="{bb22:                                             \l  ret void\l}"];
+	colorscheme = "paired12"
+        subgraph cluster_0x20c65a0 {
+          label = "";
+          style = solid;
+          color = 1
+          subgraph cluster_0x20dadc0 {
+            label = "";
+            style = filled;
+            color = 3            subgraph cluster_0x20c8320 {
+              label = "";
+              style = solid;
+              color = 5
+              subgraph cluster_0x20c6670 {
+                label = "";
+                style = solid;
+                color = 7
+                subgraph cluster_0x20c6a50 {
+                  label = "";
+                  style = solid;
+                  color = 9
+                  Node0x20dd420;
+                  Node0x20dd690;
+                }
+                Node0x20daeb0;
+                Node0x20dd340;
+                Node0x20dd400;
+                Node0x20dd3a0;
+                Node0x20dd540;
+                Node0x20dd5a0;
+              }
+              Node0x20c7380;
+              Node0x20dc260;
+              Node0x20dd450;
+              Node0x20dd660;
+              Node0x20ddec0;
+            }
+            Node0x20daed0;
+          }
+          Node0x20c66f0;
+          Node0x20daf30;
+        }
+}
