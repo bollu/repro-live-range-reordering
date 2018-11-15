@@ -111,14 +111,15 @@ void loop1() {
     //S3 : t [i + j] = B[i ][ j ];
     //S4 : C [j ][ i ] += t[i + j ];
     //      }
-    auto *may_reads = isl_union_map_read_from_str(ctx, 
+    auto *tagged_may_reads = isl_union_map_read_from_str(ctx, 
             "{"
-            "S1[i, j] -> A[i][j];"
-            "S2[i, j] -> T[i+j];" // This write is internal to S1 in a sense?
-            "S3[i, j] -> B[i][j];"
-            "S4[i, j] -> T[i+j];"
-            "S4[i, j] -> C[j,i];"
+            "[S1[i, j] -> R0[]] -> A[i][j];"
+            "[S2[i, j] -> R1[]] -> T[i+j];" // This write is internal to S1 in a sense?
+            "[S3[i, j] -> R2[]] -> B[i][j];"
+            "[S4[i, j] -> R3[]] -> T[i+j];"
+            "[S4[i, j] -> R5[]] -> C[j,i];"
             "}");
+    auto *may_reads = isl_union_map_domain_factor_domain(isl_union_map_copy(tagged_may_reads));
     // isl_map *may_writes = isl_map_read_from_str(ctx, "{}");
     auto *must_writes = isl_union_map_read_from_str(ctx,
             "{"
@@ -216,34 +217,50 @@ void loop1() {
         std::cout<<"\n\nRAW: " << isl_union_map_to_str(isl_union_flow_get_full_must_dependence(flow));
     }
 
+    isl_union_map *falsedeps_full = nullptr;
     isl_union_map *falsedeps = nullptr;
     {
         std::cout << "\n\n*** FLOW 2 (FALSE DEPENDENCES)\n";
         auto *access = isl_union_access_info_from_sink(isl_union_map_copy(may_writes));
         access = 
+            isl_union_access_info_set_must_source(access, isl_union_map_copy(must_writes));
+        access = 
             isl_union_access_info_set_may_source(access, 
                     isl_union_map_union(isl_union_map_copy(may_reads), isl_union_map_copy(may_writes)));
-        access = 
-            isl_union_access_info_set_must_source(access, isl_union_map_copy(must_writes));
         access = 
             isl_union_access_info_set_schedule(access, isl_schedule_copy(sched));
         std::cout << "\n\nACCESS: " << isl_union_access_info_to_str(access);
 
         auto *flow = isl_union_access_info_compute_flow(access);
-        // std::cout<<"\n\nFLOW: " << isl_union_flow_to_str(flow);
-        falsedeps = isl_union_flow_get_full_may_dependence(flow);
-        std::cout<<"\n\nFALSE (WAR + WAW): " << isl_union_map_to_str(falsedeps);
 
 
-        std::cout<<"\n\nFALSE (WAR + WAW): " << isl_union_map_to_str(isl_union_flow_get_may_dependence(flow));
+        falsedeps_full = isl_union_flow_get_full_may_dependence(flow);
+        falsedeps = isl_union_flow_get_may_dependence(flow);
+
+        std::cout<<"\n\nFALSE FULL(WAR + WAW): " << isl_union_map_to_str(falsedeps_full);
+
+
+        std::cout<<"\n\nFALSE (WAR + WAW): " << falsedeps;
     }
 
     assert (falsedeps);
-    isl_union_map *war = isl_union_map_intersect_domain(isl_union_map_copy(falsedeps), isl_union_map_domain(may_reads));
+    assert (falsedeps_full);
+    isl_union_map *war = 
+        isl_union_map_intersect_domain(isl_union_map_copy(falsedeps), 
+                isl_union_map_domain(may_reads));
+
+    isl_union_map *war_full = isl_union_map_intersect_domain(isl_union_map_copy(falsedeps_full), 
+            isl_union_map_domain(may_reads));
+
+
+    isl_union_map *waw_full = isl_union_map_intersect_domain(isl_union_map_copy(falsedeps_full), 
+            isl_union_map_domain(may_writes));
     std::cout<<"\n\nANTI (WAR) " << isl_union_map_to_str(war);
+    std::cout<<"\n\nANTI FULL (WAR) " << isl_union_map_to_str(war_full);
 
     isl_union_map *waw = isl_union_map_intersect_domain(isl_union_map_copy(falsedeps), isl_union_map_domain(may_writes));
      std::cout<<"\n\nANTI (WAW) " << isl_union_map_to_str(waw);
+     std::cout<<"\n\nANTI FULL (WAW) " << isl_union_map_to_str(waw_full);
 
 
      isl_union_map *liveins = nullptr;
