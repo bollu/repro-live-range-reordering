@@ -1,5 +1,6 @@
 #include <isl/set.h>
 #include <isl/map.h>
+#include <isl/union_map.h>
 #include <iostream>
 
 using namespace std;
@@ -22,14 +23,40 @@ int main() {
     isl_ctx *ctx = isl_ctx_alloc();
     isl_printer *p =  NULL; 
 
-    isl_map *may_reads = isl_map_read_from_str(ctx, "{ [S0[j, i] -> R0[]] -> A[i, j-1] }");
-    // isl_map *must_writes = isl_map_read_from_str(ctx, "{ A[x] -> A[x] }");
+    auto *may_reads = isl_union_map_read_from_str(ctx, 
+            "{"
+            "[S0[j, i] -> R0[]] -> A[i, j-1];"
+            "[S1[i, j] -> R1[]] -> T[];"
+            "[S2[i, j] -> R1[]] -> T[];"
+            "}");
     // isl_map *may_writes = isl_map_read_from_str(ctx, "{}");
+    auto *must_writes = isl_union_map_read_from_str(ctx,
+            "{"
+            "[S1[j, i] -> W0[]] -> T[];"
+            "[S2[j, i] -> W0[]] -> A[i, j];"
+            "}");
+
+
+    auto *may_writes = isl_union_map_read_from_str(ctx,
+            "{"
+            "[S1[j, i] -> W2[]] -> A[i, j];"
+            "}");
+
+    p = isl_printer_to_str(ctx);
+    isl_printer_print_union_map(p, may_reads);
+    std::cout <<"\n may reads: "<<  isl_printer_get_str(p);
+    isl_printer_free(p);
 
 
     p = isl_printer_to_str(ctx);
-    isl_printer_print_map(p, may_reads);
-    std::cout <<"\n may reads: "<<  isl_printer_get_str(p);
+    isl_printer_print_union_map(p, must_writes);
+    std::cout <<"\n must writes: "<<  isl_printer_get_str(p);
+    isl_printer_free(p);
+
+    p = isl_printer_to_str(ctx);
+    isl_printer_print_union_map(p, may_writes);
+    std::cout <<"\n may writes: "<<  isl_printer_get_str(p);
+    isl_printer_free(p);
 
     // __isl_give isl_map *isl_map_power(__isl_take isl_map *map, int *exact);
     //isl_map *m = isl_map_read_from_str(ctx, "{ A[x] -> A[x] }");
