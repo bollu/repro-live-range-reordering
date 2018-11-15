@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <isl/ast_build.h>
 #include <isl/set.h>
 #include <isl/map.h>
 #include <isl/union_map.h>
@@ -65,6 +66,12 @@ isl_stat print_point(isl_point *pt, void *data) {
 
 
 void loop1() {
+
+    isl_ctx *ctx = isl_ctx_alloc();
+    isl_printer *p =  NULL; 
+
+    // ===================
+    /*
     // DO i=0,1
     //     DO j=0,1
     //         S0: t = A(i,j-1) //R0 read
@@ -72,33 +79,6 @@ void loop1() {
     //         S2: A(i,j) = t
     //     ENDDO
     // ENDDO
-
-    isl_ctx *ctx = isl_ctx_alloc();
-    isl_printer *p =  NULL; 
-
-    /*
-    auto *may_reads = isl_union_map_read_from_str(ctx, 
-            "{"
-            "[S0[j, i] -> R0[]] -> A[i, j-1];"
-            "[S1[i, j] -> R1[]] -> T[];"
-            "[S2[i, j] -> R1[]] -> T[];"
-            "}");
-    // isl_map *may_writes = isl_map_read_from_str(ctx, "{}");
-    auto *must_writes = isl_union_map_read_from_str(ctx,
-            "{"
-            "[S0[j, i] -> R1[]] -> T[];"
-            "[S2[j, i] -> W0[]] -> A[i, j];"
-            "}");
-
-
-    auto *may_writes = isl_union_map_read_from_str(ctx,
-            "{"
-            "[S1[j, i] -> W2[]] -> A[i, j];"
-            "}");
-
-    auto *kills = isl_union_map_read_from_str(ctx, "{:1=0}");
-    */
-
     auto *may_reads = isl_union_map_read_from_str(ctx, 
             "{"
             "S0[i, j] -> A[i-1, j];"
@@ -117,6 +97,41 @@ void loop1() {
             "{"
             // NEW MAY WRITES
             "S1[i, j] -> T[];"
+            "}");
+    */
+    // ===================
+
+    //    for ( int i = 0; i < n; ++ i)
+    //        for ( int j = 0; j < n; ++ j) {
+    //S1 : t [i + j] = A[i ][ j ];
+    //S2 : C [i ][ j ] = t [i + j ];
+    //        }
+    //    for ( int i = 0; i < n; ++ i)
+    //        for ( int j = 0; j < n; ++ j) {
+    //S3 : t [i + j] = B[i ][ j ];
+    //S4 : C [j ][ i ] += t[i + j ];
+    //      }
+    auto *may_reads = isl_union_map_read_from_str(ctx, 
+            "{"
+            "S1[i, j] -> A[i][j];"
+            "S2[i, j] -> T[i+j];" // This write is internal to S1 in a sense?
+            "S3[i, j] -> B[i][j];"
+            "S4[i, j] -> T[i+j];"
+            "S4[i, j] -> C[j,i];"
+            "}");
+    // isl_map *may_writes = isl_map_read_from_str(ctx, "{}");
+    auto *must_writes = isl_union_map_read_from_str(ctx,
+            "{"
+            "S1[i, j] -> T[i+j];"
+            "S2[i, j] -> C[i,j];"
+            "S3[i, j] -> T[i+j];"
+            "S4[i, j] -> C[j,i];"
+            "}");
+
+
+    auto *may_writes = isl_union_map_read_from_str(ctx,
+            "{"
+            ": 1 = 0"
             "}");
 
     // we MUST union the must writes into the may writes.
@@ -146,9 +161,10 @@ void loop1() {
     {
         auto *new_sched = isl_union_map_read_from_str(ctx,
                 "{"
-                "S0[i, j] -> [i, j, 0] : 0 <= j <= 2 and 0 <= i <= 2;"
-                "S1[i, j] -> [i, j, 1]: 0 <= j <= 2 and 0 <= i <= 2;"
-                "S2[i, j] -> [i, j, 2]: 0 <= j <= 2 and 0 <= i <= 2;"
+                "S1[i, j] -> [0,i, j, 0] : 0 <= j <= 2 and 0 <= i <= 2;"
+                "S2[i, j] -> [0,i, j, 1]: 0 <= j <= 2 and 0 <= i <= 2;"
+                "S3[i, j] -> [1,i, j, 0]: 0 <= j <= 2 and 0 <= i <= 2;"
+                "S4[i, j] -> [1,i, j, 1]: 0 <= j <= 2 and 0 <= i <= 2;"
                 "}");
         sched =
             isl_schedule_from_domain(isl_union_map_domain(isl_union_map_copy(new_sched)));
@@ -158,6 +174,18 @@ void loop1() {
 
 
     std::cout << "\nSCHEDULE: " << isl_schedule_to_str(sched);
+
+
+
+    {
+        isl_ast_build *ast_build = isl_ast_build_alloc(ctx);
+        isl_printer *p = isl_printer_to_str(ctx);
+        p = isl_printer_set_output_format(p, ISL_FORMAT_C);
+        isl_ast_node *ast = isl_ast_build_node_from_schedule(ast_build, isl_schedule_copy(sched));
+        p = isl_printer_print_ast_node(p, ast);
+        std::cout<<"\n\nAST:\n" << isl_printer_get_str(p);
+        isl_printer_free(p);
+    }
 
 
 
@@ -205,6 +233,9 @@ void loop1() {
         // std::cout<<"\n\nFLOW: " << isl_union_flow_to_str(flow);
         falsedeps = isl_union_flow_get_full_may_dependence(flow);
         std::cout<<"\n\nFALSE (WAR + WAW): " << isl_union_map_to_str(falsedeps);
+
+
+        std::cout<<"\n\nFALSE (WAR + WAW): " << isl_union_map_to_str(isl_union_flow_get_may_dependence(flow));
     }
 
     assert (falsedeps);
