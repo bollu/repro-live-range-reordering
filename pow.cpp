@@ -23,8 +23,8 @@ int main() {
     isl_printer *p =  NULL; 
 
     isl_map *may_reads = isl_map_read_from_str(ctx, "{ [S0[j, i] -> R0[]] -> A[i, j-1] }");
-    isl_map *must_writes = isl_map_read_from_str(ctx, "{ A[x] -> A[x] }");
-    isl_map *may_writes = isl_map_read_from_str(ctx, "{}");
+    // isl_map *must_writes = isl_map_read_from_str(ctx, "{ A[x] -> A[x] }");
+    // isl_map *may_writes = isl_map_read_from_str(ctx, "{}");
 
 
     p = isl_printer_to_str(ctx);
