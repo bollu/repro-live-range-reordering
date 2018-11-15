@@ -75,6 +75,7 @@ void loop1() {
     isl_ctx *ctx = isl_ctx_alloc();
     isl_printer *p =  NULL; 
 
+    /*
     auto *may_reads = isl_union_map_read_from_str(ctx, 
             "{"
             "[S0[j, i] -> R0[]] -> A[i, j-1];"
@@ -94,7 +95,29 @@ void loop1() {
             "[S1[j, i] -> W2[]] -> A[i, j];"
             "}");
 
-    auto *kills = isl_union_map_read_from_str(ctx, "{}");
+    auto *kills = isl_union_map_read_from_str(ctx, "{:1=0}");
+    */
+
+    auto *may_reads = isl_union_map_read_from_str(ctx, 
+            "{"
+            "S0[j, i] -> A[i, j-1];"
+            "S1[i, j] -> T[];"
+            "S2[i, j] -> T[];"
+            "}");
+    // isl_map *may_writes = isl_map_read_from_str(ctx, "{}");
+    auto *must_writes = isl_union_map_read_from_str(ctx,
+            "{"
+            "S1[j, i] -> T[];"
+            "S2[j, i] -> A[i, j];"
+            "}");
+
+
+    auto *may_writes = isl_union_map_read_from_str(ctx,
+            "{"
+            "S1[j, i] -> A[i, j];"
+            "}");
+
+    auto *kills = isl_union_map_read_from_str(ctx, "{:1=0}");
 
     p = isl_printer_to_str(ctx);
     isl_printer_print_union_map(p, may_reads);
@@ -113,8 +136,8 @@ void loop1() {
     isl_printer_free(p);
 
 
-    auto *domain = isl_union_set_read_from_str(ctx, " {[i, j] }");
-    isl_schedule *sched = isl_schedule_from_domain(domain);
+    auto *domain = isl_union_set_read_from_str(ctx, " {[i, j, k]}");
+    isl_schedule *sched = nullptr;
 
     {
         auto *new_sched = isl_union_map_read_from_str(ctx,
@@ -123,6 +146,8 @@ void loop1() {
                 "S1[i, j] -> [j, i, 1];"
                 "S2[i, j] -> [j, i, 2];"
                 "}");
+        sched =
+            isl_schedule_from_domain(isl_union_map_domain(isl_union_map_copy(new_sched)));
         sched = isl_schedule_insert_partial_schedule(sched, 
           isl_multi_union_pw_aff_from_union_map(new_sched));
     }
@@ -144,14 +169,15 @@ void loop1() {
     //     intermediate must write or kill
     
     auto *access = isl_union_access_info_from_sink(isl_union_map_copy(may_reads));
-    access = isl_union_access_info_set_kill(access, isl_union_map_copy(kills));
-    access = isl_union_access_info_set_may_source(access, isl_union_map_copy(may_writes));
-    access = isl_union_access_info_set_must_source(access, isl_union_map_copy(must_writes));
+    // access = isl_union_access_info_set_kill(access, isl_union_map_copy(kills));
+     access = isl_union_access_info_set_kill(access, isl_union_map_copy(may_reads));
+    // access = isl_union_access_info_set_may_source(access, isl_union_map_copy(may_writes));
+    // access = isl_union_access_info_set_must_source(access, isl_union_map_copy(must_writes));
     access = isl_union_access_info_set_schedule(access, sched);
     std::cout << "\n\nACCESS: " << isl_union_access_info_to_str(access);
 
     auto *flow = isl_union_access_info_compute_flow(access);
-    std::cout<<"\nFLOW: " << isl_union_flow_to_str(flow);
+    std::cout<<"\n\nFLOW: " << isl_union_flow_to_str(flow);
 
     // __isl_give isl_map *isl_map_power(__isl_take isl_map *map, int *exact);
     //isl_map *m = isl_map_read_from_str(ctx, "{ A[x] -> A[x] }");
